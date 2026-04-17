@@ -10,59 +10,6 @@ final class QuestionFactory: QuestionFactoryProtocol {
         self.delegate = delegate
     }
     
-//    private let questions: [QuizQuestion] = [
-//        QuizQuestion(
-//            image: "The Godfather",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: true
-//        ),
-//        QuizQuestion(
-//            image: "The Dark Knight",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: true
-//        ),
-//        QuizQuestion(
-//            image: "Kill Bill",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: true
-//        ),
-//        QuizQuestion(
-//            image: "The Avengers",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: true
-//        ),
-//        QuizQuestion(
-//            image: "Deadpool",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: true
-//        ),
-//        QuizQuestion(
-//            image: "The Green Knight",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: true
-//        ),
-//        QuizQuestion(
-//            image: "Old",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: false
-//        ),
-//        QuizQuestion(
-//            image: "The Ice Age Adventures of Buck Wild",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: false
-//        ),
-//        QuizQuestion(
-//            image: "Tesla",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: false
-//        ),
-//        QuizQuestion(
-//            image: "Vivarium",
-//            text: "Рейтинг этого фильма больше, чем 6?",
-//            correctAnswer: false
-//        )
-//    ]
-    
     private var movies: [MostPopularMovie] = []
     
     func loadData() {
@@ -92,25 +39,33 @@ final class QuestionFactory: QuestionFactoryProtocol {
             } catch {
                 print("Failed to load image")
             }
-            
-            let rating = Float(movie.rating) ?? 0
-            
-            let threshold = Float(Int.random(in: 5...9))
-            let isMoreThan = Bool.random()
-            
-            let comparison = isMoreThan ? "больше" : "меньше"
-            let text = "Рейтинг этого фильма \(comparison) чем \(Int(threshold))?"
-            let correctAnswer = isMoreThan ? rating > threshold : rating < threshold
-            
-            let question = QuizQuestion(image: imageData,
-                                        text: text,
-                                        correctAnswer: correctAnswer)
+                   
+            let question = makeQuestion(movie: movie, imageData: imageData)
             
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.delegate?.didReceiveNextQuestion(question: question)
             }
         }
+    }
+    
+    private func makeQuestion(movie: MostPopularMovie, imageData: Data) -> QuizQuestion {
+        let rating = Float(movie.rating) ?? 0
+        let (threshold, isMoreThan) = generateComparison()
+        
+        let comparison = isMoreThan ? "больше" : "меньше"
+        let text = "Рейтинг этого фильма \(comparison) чем \(Int(threshold))?"
+        let correctAnswer = isMoreThan ? rating > threshold : rating < threshold
+        
+        return QuizQuestion(image: imageData,
+                            text: text,
+                            correctAnswer: correctAnswer)
+    }
+
+    private func generateComparison() -> (threshold: Float, isMoreThan: Bool) {
+        let threshold = Float(Int.random(in: 5...9))
+        let isMoreThan = Bool.random()
+        return (threshold, isMoreThan)
     }
     
     func setup(delegate: QuestionFactoryDelegate) {

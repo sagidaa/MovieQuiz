@@ -7,6 +7,10 @@ struct NetworkClient {
         case emptyData
     }
     
+    private enum Constants {
+        static let successCodeRange = 200..<300
+    }
+    
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
         
         let request = URLRequest(url: url)
@@ -19,7 +23,7 @@ struct NetworkClient {
             }
             
             if let response = response as? HTTPURLResponse,
-               response.statusCode < 200 || response.statusCode >= 300 {
+               !Constants.successCodeRange.contains(response.statusCode) {
                 handler(.failure(NetworkError.codeError))
                 return
             }

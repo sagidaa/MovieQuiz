@@ -1,4 +1,4 @@
-import UIKit //мой код//
+import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
@@ -25,7 +25,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var correctAnswers: Int = 0
     
     private var questionFactory: QuestionFactoryProtocol?
-    private var currentQuestion: QuizQuestion?
     
     private var alertPresenter = ResultAlertPresenter()
     
@@ -45,22 +44,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showLoadingIndicator()
         questionFactory?.loadData()
         
+        presenter.viewController = self
+        
     }
     
     // MARK: - QuestionFactoryDelegate
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question else {
-            return
-        }
-        
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-            
-        }
+        presenter.didReceiveNextQuestion(question: question)
     }
     
     func didLoadDataFromServer() {
@@ -79,7 +70,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         textLabel.font = UIFont(name: "YSDisplay-Bold", size: 23)
     }
     
-    private func show(quiz step: QuizStepViewModel) {
+    func show(quiz step: QuizStepViewModel) {
         imageView.layer.borderWidth = 0
         imageView.image = UIImage(data: step.image) ?? UIImage()
         textLabel.text = step.question
@@ -104,7 +95,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter.show(in: self, model: model)
     }
     
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         if isCorrect {
             correctAnswers += 1
         }
@@ -117,43 +108,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
-            self.showNextQuestionOrResults()
+            self.presenter.correctAnswers = self.correctAnswers
+            self.presenter.questionFactory = self.questionFactory
+            self.presenter.showNextQuestionOrResults()
         }
-    }
-    
-    private func showNextQuestionOrResults() {
-        if presenter.isLastQuestion() {
-            showResults()
-            return
-        }
-        
-        presenter.switchToNextQuestion()
-        showNextQuestion()
-    }
-    
-    private func showNextQuestion() {
-        questionFactory?.requestNextQuestion()
-    }
-    
-    private func showResults() {
-        statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
-        
-        let bestGame = statisticService.bestGame
-        
-        let text = """
-            Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)
-            Количество сыгранных квизов: \(statisticService.gamesCount)
-            Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
-            Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
-            """
-        
-        let viewModel = QuizResultsViewModel(
-            title: Constants.resultsTitle,
-            text: text,
-            buttonText: Constants.resultsButtonText
-        )
-        
-        show(quiz: viewModel)
     }
     
     private func showNetworkError(message: String) {
@@ -189,19 +147,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         noButton.isEnabled = isEnabled
     }
     
-    private func handleAnswer(isYes: Bool) {
-        guard let currentQuestion else { return }
-        let isCorrect = isYes == currentQuestion.correctAnswer
-        showAnswerResult(isCorrect: isCorrect)
-    }
-    
     // MARK: - IBActions
     
-    @IBAction private func noButtonClicked(_ sender: UIButton) {
-        handleAnswer(isYes: false)
+    @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        presenter.yesButtonClicked()
     }
     
-    @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        handleAnswer(isYes: true)
+    @IBAction private func noButtonClicked(_ sender: UIButton) {
+        presenter.noButtonClicked()
     }
 }

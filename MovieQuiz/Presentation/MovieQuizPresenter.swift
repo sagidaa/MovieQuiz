@@ -10,8 +10,8 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
 
     // MARK: - Properties
-
-    private weak var viewController: MovieQuizViewController?
+    
+    private weak var viewController: (any MovieQuizViewControllerProtocol)?
     private var questionFactory: QuestionFactoryProtocol?
     private let statisticService: StatisticServiceProtocol
     
@@ -22,7 +22,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     // MARK: - Init
     
-    init(viewController: MovieQuizViewController) {
+    init(viewController: any MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         self.statisticService = StatisticService()
         

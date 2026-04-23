@@ -20,25 +20,6 @@ final class MovieQuizUITests: XCTestCase {
         app = nil
     }
     
-//    func testYesButton() {
-//        
-//        sleep(3)
-//        
-//        let firstPoster = app.images["Poster"]
-//        let firstPosterData = firstPoster.screenshot().pngRepresentation
-//        
-//        app.buttons["No"].tap()
-//        sleep(3)
-//        
-//        let secondPoster = app.images["Poster"]
-//        let secondPosterData = secondPoster.screenshot().pngRepresentation
-//        
-//        let indexLabel = app.staticTexts["Index"]
-//        
-//        XCTAssertNotEqual(firstPosterData, secondPosterData)
-//        XCTAssertNotEqual(indexLabel.label, "2/10")
-//    }
-    
     func testGameFinish() {
         sleep(2)
         for _ in 1...10 {

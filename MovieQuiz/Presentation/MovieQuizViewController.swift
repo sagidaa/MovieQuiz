@@ -1,4 +1,4 @@
-import UIKit
+import UIKit //мой код//
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
@@ -23,8 +23,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Properties
     
     private var correctAnswers: Int = 0
-    private var currentQuestionIndex: Int = 0
-    private let questionsAmount: Int = 10
     
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
@@ -32,6 +30,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var alertPresenter = ResultAlertPresenter()
     
     private var statisticService: StatisticServiceProtocol = StatisticService()
+    
+    private let presenter = MovieQuizPresenter()
     
     // MARK: - Lifecycle
     
@@ -55,7 +55,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
         
         currentQuestion = question
-        let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
@@ -79,17 +79,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         textLabel.font = UIFont(name: "YSDisplay-Bold", size: 23)
     }
     
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        let questionStep = QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        return questionStep
-    }
-    
     private func show(quiz step: QuizStepViewModel) {
         imageView.layer.borderWidth = 0
-        imageView.image = step.image
+        imageView.image = UIImage(data: step.image) ?? UIImage()
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
         
@@ -104,7 +96,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         ) { [weak self] in
             guard let self else { return }
             
-            currentQuestionIndex = 0
+            self.presenter.resetQuestionIndex()
             correctAnswers = 0
             questionFactory?.requestNextQuestion()
         }
@@ -130,12 +122,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func showNextQuestionOrResults() {
-        if currentQuestionIndex == questionsAmount - 1 {
+        if presenter.isLastQuestion() {
             showResults()
             return
         }
         
-        currentQuestionIndex += 1
+        presenter.switchToNextQuestion()
         showNextQuestion()
     }
     
@@ -144,12 +136,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func showResults() {
-        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
         
         let bestGame = statisticService.bestGame
         
         let text = """
-            Ваш результат: \(correctAnswers)/\(questionsAmount)
+            Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)
             Количество сыгранных квизов: \(statisticService.gamesCount)
             Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
             Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
@@ -173,8 +165,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             buttonText: Constants.errorButtonText) { [weak self] in
                 guard let self else { return }
                 
-                currentQuestionIndex = 0
-                correctAnswers = 0
+                self.presenter.resetQuestionIndex()
+                self.correctAnswers = 0
                 showLoadingIndicator()
                 questionFactory?.loadData()
             }

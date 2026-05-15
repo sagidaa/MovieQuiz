@@ -4,7 +4,11 @@ struct MoviesLoader: MoviesLoading {
     
     // MARK: - NetworkClient
     
-    private let networkClient = NetworkClient()
+    private let networkClient: NetworkProtocol
+    
+    init(networkClient: NetworkProtocol = NetworkClient()) {
+        self.networkClient = networkClient
+    }
     
     // MARK: - URL
     

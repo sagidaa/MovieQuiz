@@ -13,8 +13,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
 
     // MARK: - Properties
         
-    private var alertPresenter = ResultAlertPresenter()
-    private var presenter: MovieQuizPresenter!
+    private let alertPresenter = ResultAlertPresenter()
+    private lazy var presenter = MovieQuizPresenter(viewController: self)
     
     // MARK: - Lifecycle
     
@@ -45,7 +45,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     
     func show(quiz step: QuizStepViewModel) {
         imageView.layer.borderWidth = 0
-        imageView.image = UIImage(data: step.image) ?? UIImage()
+        imageView.image = UIImage(data: step.image)
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
         setButtonsEnabled(true)

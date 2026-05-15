@@ -1,7 +1,7 @@
 import XCTest
 @testable import MovieQuiz
 
-class ArrayTests: XCTestCase {
+final class ArrayTests: XCTestCase {
     func testGetValueInRange() throws {
         //Given/Дано — это состояние, когда мы получаем начальные данные, с которыми будем работать.
         let array = [1, 1, 2, 3, 5]

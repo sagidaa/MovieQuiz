@@ -1,18 +1,14 @@
 import Foundation
 
-protocol NetworkRouting {
+protocol NetworkProtocol {
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
 }
 
-struct NetworkClient: NetworkRouting {
+struct NetworkClient: NetworkProtocol {
     
     private enum NetworkError: Error {
-        case codeError
+        case invalidStatusCode
         case emptyData
-    }
-    
-    private enum Constants {
-        static let successCodeRange = 200..<300
     }
     
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
@@ -22,22 +18,22 @@ struct NetworkClient: NetworkRouting {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             
             if let error {
-                handler(.failure(error))
+                DispatchQueue.main.async {  handler(.failure(error)) }
                 return
             }
             
             if let response = response as? HTTPURLResponse,
-               !Constants.successCodeRange.contains(response.statusCode) {
-                handler(.failure(NetworkError.codeError))
+               !(200..<300).contains(response.statusCode) {
+                DispatchQueue.main.async { handler(.failure(NetworkError.invalidStatusCode)) }
                 return
             }
             
             guard let data else {
-                handler(.failure(NetworkError.emptyData))
+                DispatchQueue.main.async { handler(.failure(NetworkError.emptyData)) }
                 return
             }
             
-            handler(.success(data))
+            DispatchQueue.main.async { handler(.success(data)) }
         }
         
         task.resume()
